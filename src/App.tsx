@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, BookText, Volume2, VolumeX, Moon, Sun, Loader2, ChevronRight, CheckCircle2, XCircle, LayoutGrid, GraduationCap } from 'lucide-react';
+import { BookOpen, BookText, Volume2, VolumeX, Moon, Sun, Loader2, ChevronRight, CheckCircle2, XCircle, LayoutGrid, GraduationCap, Home } from 'lucide-react';
 
 const NCERT_DATA = {
   Subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'],
@@ -332,20 +332,38 @@ IMPORTANT: Ensure your response is strictly valid JSON without endless looping o
     }
   }, [loading, content]);
 
+  const goHome = () => {
+    setContent(null);
+    setError(null);
+    setLoading(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-[#F8FAFC] transition-colors duration-300 antialiased flex flex-col`} style={{ fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <header className="h-[80px] px-4 md:px-10 flex items-center border-b border-slate-200 dark:border-[#334155] bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur-md sticky top-0 z-10 transition-all">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between w-full">
-          <div className="flex items-center gap-2 md:gap-3 text-blue-600 dark:text-[#38BDF8]">
+          <div className="flex items-center gap-2 md:gap-3 text-blue-600 dark:text-[#38BDF8] cursor-pointer" onClick={goHome}>
              <GraduationCap className="w-6 h-6 md:w-8 md:h-8 shrink-0" />
-             <h1 className="text-[20px] md:text-[28px] font-[800] tracking-[-1px]">Class 9 NCERT Tutor</h1>
+             <h1 className="text-[20px] md:text-[28px] font-[800] tracking-[-1px] hidden sm:block">Class 9 NCERT Tutor</h1>
+             <h1 className="text-[20px] md:hidden font-[800] tracking-[-1px]">NCERT Tutor</h1>
           </div>
-          <button 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-3 rounded-full text-slate-500 dark:text-[#94A3B8] hover:bg-slate-200 dark:hover:bg-[#1E293B] transition-colors"
-          >
-            {theme === 'dark' ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+               onClick={goHome}
+               className="flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 dark:text-[#F8FAFC] hover:bg-slate-200 dark:hover:bg-[#1E293B] font-[600] transition-colors"
+               title="Go Home"
+            >
+               <Home className="w-5 h-5" />
+               <span className="hidden sm:inline">Home</span>
+            </button>
+            <button 
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-3 rounded-full text-slate-500 dark:text-[#94A3B8] hover:bg-slate-200 dark:hover:bg-[#1E293B] transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5 md:w-6 md:h-6" /> : <Moon className="w-5 h-5 md:w-6 md:h-6" />}
+            </button>
+          </div>
         </div>
       </header>
 
