@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  option {
+    @apply text-slate-900 bg-white dark:text-slate-100 dark:bg-slate-800;
+  }
+}
+
