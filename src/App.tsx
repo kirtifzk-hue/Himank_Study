@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, BookText, Volume2, VolumeX, Moon, Sun, Loader2, ChevronRight, CheckCircle2, XCircle, LayoutGrid, GraduationCap, Home, Download, Settings2, Columns3, AlignLeft, Palette, Type as TypeIcon, Rocket, Brain, Lightbulb, Zap, Star, Microscope, Sparkles, Target, Compass, Flame } from 'lucide-react';
+import { BookOpen, BookText, Volume2, VolumeX, Moon, Sun, Loader2, ChevronRight, CheckCircle2, XCircle, LayoutGrid, GraduationCap, Home, Download, Settings2, Columns3, AlignLeft, Palette, Type as TypeIcon, Rocket, Brain, Lightbulb, Zap, Star, Microscope, Sparkles, Target, Compass, Flame, Maximize, Minimize } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
 const ICON_MAP: Record<string, any> = { Rocket, Brain, Lightbulb, Zap, Star, Microscope, Sparkles, Target, Compass, Flame };
@@ -91,6 +91,7 @@ interface ActivityContent {
 
 function ContentDisplay({ content, activity, language }: { content: ActivityContent, activity: string, language: string }) {
   const [speaking, setSpeaking] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showAnswers, setShowAnswers] = useState<Record<number, boolean>>({});
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({});
   const [fillInputs, setFillInputs] = useState<Record<number, string>>({});
@@ -160,33 +161,62 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      document.body.style.overflow = 'auto'; // reset on unmount
     };
   }, []);
 
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }, [isFullscreen]);
+
   return (
-    <div className="flex flex-col flex-1 h-full relative space-y-12">
+    <div className={isFullscreen ? "fixed inset-0 z-50 bg-indigo-50 dark:bg-slate-900 p-4 sm:p-6 md:p-8 overflow-y-auto h-[100dvh] flex flex-col space-y-12" : "flex flex-col flex-1 h-full relative space-y-12"}>
+      {isFullscreen && (
+         <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">NCERT Study Buddy</h2>
+            <button onClick={() => setIsFullscreen(false)} className="p-2 sm:p-3 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 font-bold flex items-center gap-2 hover:bg-orange-200 dark:hover:bg-orange-500/30">
+               <Minimize className="w-5 h-5" /> <span className="hidden sm:inline">Exit Fullscreen</span>
+            </button>
+         </div>
+      )}
       <div className="flex items-start justify-between flex-wrap gap-4">
-        <h2 className="text-3xl md:text-5xl font-black text-indigo-900 dark:text-white leading-tight tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{content.title}</h2>
-        <button 
-           onClick={() => {
-             if (speaking) {
-               stopSpeaking();
-             } else {
-               let textToSpeak = content.title + ". ";
-               if (content.summaryTopics && content.summaryTopics.length > 0) {
-                 textToSpeak += content.summaryTopics.map(t => t.title + ". " + t.content).join(" ");
-               } else if (content.content) {
-                 textToSpeak += content.content;
+        <h2 className="text-3xl md:text-5xl font-black text-indigo-900 dark:text-white leading-tight tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent flex-1 mr-4">{content.title}</h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {!isFullscreen && (
+            <button 
+               onClick={() => setIsFullscreen(true)}
+               className="bg-purple-50 dark:bg-purple-500/10 border-2 border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 px-4 sm:px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base cursor-pointer hover:bg-purple-100 hover:scale-105 active:scale-95 transition-all shadow-sm flex-1 sm:flex-none"
+            >
+               <Maximize className="w-5 h-5" />
+               <span className="hidden sm:inline">FULL SCREEN</span>
+               <span className="sm:hidden">EXPAND</span>
+            </button>
+          )}
+          <button 
+             onClick={() => {
+               if (speaking) {
+                 stopSpeaking();
+               } else {
+                 let textToSpeak = content.title + ". ";
+                 if (content.summaryTopics && content.summaryTopics.length > 0) {
+                   textToSpeak += content.summaryTopics.map(t => t.title + ". " + t.content).join(" ");
+                 } else if (content.content) {
+                   textToSpeak += content.content;
+                 }
+                 speak(textToSpeak);
                }
-               speak(textToSpeak);
-             }
-           }}
-           className={`bg-indigo-50 dark:bg-indigo-500/10 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 px-5 py-3 rounded-2xl flex items-center gap-3 font-bold text-sm md:text-base cursor-pointer hover:bg-indigo-100 hover:scale-105 active:scale-95 transition-all shadow-sm ${speaking ? 'opacity-80 animate-pulse' : ''}`}
-        >
-          {speaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          <span className="hidden sm:inline">{speaking ? "STOP SPEAKING" : "SPEAK CONTENT"}</span>
-          <span className="sm:hidden">{speaking ? "STOP" : "SPEAK"}</span>
-        </button>
+             }}
+             className={`bg-indigo-50 dark:bg-indigo-500/10 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 px-4 sm:px-5 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base cursor-pointer hover:bg-indigo-100 hover:scale-105 active:scale-95 transition-all shadow-sm flex-1 sm:flex-none ${speaking ? 'opacity-80 animate-pulse' : ''}`}
+          >
+            {speaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            <span className="hidden sm:inline">{speaking ? "STOP SPEAKING" : "SPEAK CONTENT"}</span>
+            <span className="sm:hidden">{speaking ? "STOP" : "SPEAK"}</span>
+          </button>
+        </div>
       </div>
 
       {content.summaryTopics && content.summaryTopics.length > 0 && (
@@ -383,24 +413,24 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
                     )})}
                   </div>
                 ) : (
-                  <div className={`flex flex-col relative ml-4 md:ml-12 py-4 ${infoSpacing === 'tight' ? 'gap-6' : infoSpacing === 'loose' ? 'gap-14' : 'gap-10'}`}>
-                    <div className={`absolute left-[15px] top-4 bottom-4 w-1 flex flex-col items-center opacity-20 ${activeColor.bg.replace(/dark:\S+/g, '').trim().split(' ')[0]}`}>
+                  <div className={`flex flex-col relative ml-2 sm:ml-4 md:ml-12 py-4 ${infoSpacing === 'tight' ? 'gap-4 sm:gap-6' : infoSpacing === 'loose' ? 'gap-8 sm:gap-14' : 'gap-6 sm:gap-10'}`}>
+                    <div className={`absolute left-[11px] sm:left-[15px] top-4 bottom-4 w-1 flex flex-col items-center opacity-20 ${activeColor.bg.replace(/dark:\S+/g, '').trim().split(' ')[0]}`}>
                       <div className="w-full h-full border-l-[3px] border-dashed border-inherit"></div>
                     </div>
                     {content.infographicItems.map((item, idx) => {
                       const IconComponent = item.iconName && ICON_MAP[item.iconName] ? ICON_MAP[item.iconName] : Star;
                       return (
-                      <div key={idx} className="relative pl-10 md:pl-16 group">
-                        <div className={`absolute -left-1 top-1 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md ring-4 ring-white z-10 hover:scale-110 transition-transform ${activeColor.bg.replace(/dark:\S+/g, '').trim()} ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>
+                      <div key={idx} className="relative pl-8 sm:pl-10 md:pl-16 group">
+                        <div className={`absolute -left-1 sm:-left-1 top-0 sm:top-1 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shadow-md ring-4 ring-white z-10 hover:scale-110 transition-transform ${activeColor.bg.replace(/dark:\S+/g, '').trim()} ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>
                           {idx + 1}
                         </div>
-                        <div className={`bg-white/90 backdrop-blur-sm border-2 border-slate-200 rounded-2xl relative overflow-hidden shadow-sm hover:shadow-md ${activeColor.border.replace(/dark:\S+/g, '').trim()} transition-all duration-300 ${infoSpacing === 'tight' ? 'p-4 md:p-6 mb-1' : infoSpacing === 'loose' ? 'p-6 md:p-10 mb-4' : 'p-5 md:p-8 mb-3'}`}>
-                           <div className="flex items-start sm:items-center justify-between mb-3 gap-2">
-                             <span className={`font-bold text-[10px] sm:text-xs uppercase tracking-widest bg-slate-100 px-2.5 sm:px-3 py-1 rounded-md text-left leading-tight ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>{item.conceptText}</span>
+                        <div className={`bg-white/90 backdrop-blur-sm border-2 border-slate-200 rounded-2xl relative overflow-hidden shadow-sm hover:shadow-md ${activeColor.border.replace(/dark:\S+/g, '').trim()} transition-all duration-300 ${infoSpacing === 'tight' ? 'p-3 sm:p-4 md:p-6 mb-1' : infoSpacing === 'loose' ? 'p-5 sm:p-6 md:p-10 mb-4' : 'p-4 sm:p-5 md:p-8 mb-3'}`}>
+                           <div className="flex items-start sm:items-center justify-between mb-2 sm:mb-3 gap-2">
+                             <span className={`font-bold text-[10px] sm:text-xs uppercase tracking-widest bg-slate-100 px-2 sm:px-2.5 sm:pt-1 sm:pb-1 rounded-md text-left leading-tight ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>{item.conceptText}</span>
                              <IconComponent className={`w-4 h-4 sm:w-5 sm:h-5 opacity-40 shrink-0 mt-0.5 sm:mt-0 ${activeColor.text.replace(/dark:\S+/g, '').trim()}`} />
                            </div>
                            <h4 className={`text-slate-900 font-bold relative z-10 leading-snug ${infoSpacing === 'tight' ? 'text-base sm:text-lg md:text-xl' : infoSpacing === 'loose' ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl md:text-2xl'}`}>{item.title}</h4>
-                           <p className={`text-slate-600 leading-relaxed relative z-10 mt-2 sm:mt-3 ${infoSpacing === 'tight' ? 'text-[11px] sm:text-xs md:text-sm' : infoSpacing === 'loose' ? 'text-sm sm:text-base md:text-lg' : 'text-xs sm:text-sm md:text-base'}`}>{item.description}</p>
+                           <p className={`text-slate-600 leading-relaxed relative z-10 mt-1.5 sm:mt-3 ${infoSpacing === 'tight' ? 'text-[11px] sm:text-xs md:text-sm' : infoSpacing === 'loose' ? 'text-sm sm:text-base md:text-lg' : 'text-xs sm:text-sm md:text-base'}`}>{item.description}</p>
                         </div>
                       </div>
                     )})}
@@ -423,11 +453,11 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
             {content.questions.map((q, idx) => (
                 <div key={idx} className="relative flex flex-col gap-6 md:gap-8">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 flex-1">
                        <span className="text-indigo-400 dark:text-indigo-500 font-black text-sm tracking-widest uppercase">
                           Question {String(idx + 1).padStart(2, '0')} of {String(content.questions?.length).padStart(2, '0')}
                        </span>
-                       <h3 className="text-xl md:text-3xl leading-snug font-black text-slate-800 dark:text-white">{q.questionText}</h3>
+                       <h3 className="text-xl md:text-2xl leading-relaxed font-serif text-slate-800 dark:text-white text-left">{q.questionText}</h3>
                     </div>
                     <button 
                       onClick={() => speak(q.questionText + ". " + (q.options ? q.options.join(", ") : ""))}
@@ -478,18 +508,18 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
                      </div>
                   )}
 
-                  {(q.type === 'mcq' || q.type === 'fill_blank') && !showAnswers[idx] && (
+                  {(q.type === 'mcq' || q.type === 'fill_blank' || q.type === 'qa') && !showAnswers[idx] && (
                      <div className="flex justify-start mt-2">
                          <button 
                            onClick={() => setShowAnswers(prev => ({...prev, [idx]: true}))}
                            className="w-full md:w-auto bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 hover:border-indigo-400 hover:bg-white text-slate-500 dark:text-slate-300 hover:text-indigo-600 px-6 py-3 rounded-xl text-base font-bold cursor-pointer transition-all shadow-sm"
                          >
-                           Check Answer
+                           {q.type === 'qa' ? 'Show Answer' : 'Check Answer'}
                          </button>
                      </div>
                   )}
 
-                  {(q.type === 'qa' || showAnswers[idx]) && (
+                  {showAnswers[idx] && (
                      <motion.div 
                        initial={{ opacity: 0, height: 0 }}
                        animate={{ opacity: 1, height: 'auto' }}
@@ -600,7 +630,7 @@ Ensure questions are highly engaging and appropriate for a 14-15 year old studen
 
 STRICT LENGTH LIMITS:
 - If activity is 'summary': Provide a structured summary divided topic-wise using the 'summaryTopics' array. DO NOT use the 'content' field. Give 3 to 5 distinct topic objects. STRICTLY UNDER 300 WORDS TOTAL.
-- If activity is 'mcq': Generate EXACTLY 5 multiple choice questions.
+- If activity is 'mcq': Generate EXACTLY 5 multiple choice questions with ONLY 2 options each.
 - If activity is 'fill_blank': Generate EXACTLY 5 fill in the blank questions.
 - If activity is 'qa': Generate EXACTLY 3 important question and answers.
 - If activity is 'infographic': Generate EXACTLY 4 key concepts. Give each item a 'title', a 'conceptText' (1-3 words), and a 'description' STRICTLY UNDER 30 WORDS EACH. Make the description highly entertaining, using a mind-blowing fact or a clever analogy to keep students hooked!
@@ -648,7 +678,7 @@ CRITICAL JSON INSTRUCTIONS:
               properties: {
                 questionText: { type: Type.STRING, description: "The question text. NO EMOJIS." },
                 type: { type: Type.STRING, description: "'mcq', 'fill_blank', 'qa'" },
-                options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Array of exactly 4 string options if type is 'mcq'. NO EMOJIS." },
+                options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Array of exactly 2 string options if type is 'mcq'. NO EMOJIS." },
                 answer: { type: Type.STRING, description: "Correct answer or text to fill in the blank. For 'qa' put the answer here. NO EMOJIS." },
                 explanation: { type: Type.STRING, description: "Explanation of the answer. NO EMOJIS." }
               }
