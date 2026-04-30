@@ -398,15 +398,15 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
                           <div className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full font-bold text-xs sm:text-sm shrink-0 shadow-sm mt-0.5 ${activeColor.bg.replace(/dark:\S+/g, '').trim()} ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>
                               {idx + 1}
                           </div>
-                          <span className={`font-bold text-[10px] sm:text-xs uppercase tracking-widest bg-slate-100 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md leading-tight ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>{item.conceptText}</span>
+                          <span className={`font-bold text-[17px] uppercase tracking-widest bg-slate-100 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md leading-tight ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>{item.conceptText}</span>
                         </div>
                         <div className="flex items-start gap-3 sm:gap-4 mt-1 sm:mt-2">
                            <div className={`mt-1 p-2 rounded-xl bg-slate-50 border border-slate-100 shrink-0 ${activeColor.text.replace(/dark:\S+/g, '').trim()}`}>
                               <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                            </div>
                            <div className="flex-1">
-                             <h4 className={`text-slate-900 font-bold relative z-10 leading-snug ${infoSpacing === 'tight' ? 'text-base sm:text-lg' : infoSpacing === 'loose' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>{item.title}</h4>
-                             <p className={`text-slate-600 leading-relaxed mt-1.5 sm:mt-2 relative z-10 flex-1 ${infoSpacing === 'tight' ? 'text-[11px] sm:text-xs' : infoSpacing === 'loose' ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'}`}>{item.description}</p>
+                             <h4 className={`text-slate-900 font-bold relative z-10 leading-snug text-[21px]`}>{item.title}</h4>
+                             <p className={`text-slate-600 font-bold text-[17px] leading-relaxed relative z-10 flex-1 w-[211px] h-[162.75px] -ml-[21px] mt-[6px] mb-[-1px]`}>{item.description}</p>
                            </div>
                         </div>
                       </div>
@@ -461,9 +461,9 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
                     </div>
                     <button 
                       onClick={() => speak(q.questionText + ". " + (q.options ? q.options.join(", ") : ""))}
-                      className="bg-indigo-50 dark:bg-indigo-500/10 border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 p-3 rounded-2xl flex items-center justify-center shrink-0 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:scale-110 active:scale-95 transition-all shadow-sm"
+                      className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 p-2 sm:p-2.5 rounded-xl flex items-center justify-center shrink-0 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:scale-110 active:scale-95 transition-all shadow-sm"
                     >
-                      <Volume2 className="w-5 h-5" />
+                      <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
 
@@ -496,14 +496,22 @@ function ContentDisplay({ content, activity, language }: { content: ActivityCont
                      </div>
                   )}
 
-                  {q.type === 'fill_blank' && !showAnswers[idx] && (
-                     <div className="flex gap-4">
+                  {q.type === 'fill_blank' && (
+                     <div className="flex flex-col gap-4">
                         <input 
                            type="text" 
                            value={fillInputs[idx] || ''}
                            onChange={e => setFillInputs(prev => ({...prev, [idx]: e.target.value}))}
                            placeholder="Type your answer..."
-                           className="flex-1 w-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 rounded-2xl p-5 md:p-6 text-base md:text-lg font-bold text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 dark:focus:border-indigo-500 outline-none transition-all"
+                           disabled={showAnswers[idx]}
+                           className={`flex-1 w-full border-4 rounded-2xl p-5 md:p-6 text-base md:text-lg font-bold outline-none transition-all
+                              ${showAnswers[idx] 
+                                 ? (fillInputs[idx]?.trim().toLowerCase() === q.answer.trim().toLowerCase() 
+                                    ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400'
+                                    : 'bg-rose-50 dark:bg-rose-500/10 border-rose-400 text-rose-600 dark:text-rose-400')
+                                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 focus:border-indigo-400 focus:bg-indigo-50'
+                              }
+                           `}
                         />
                      </div>
                   )}
@@ -578,10 +586,10 @@ export default function App() {
   }, [theme]);
   
   // Form State
-  const [subject, setSubject] = useState(NCERT_DATA.Subjects[0]);
+  const [subject, setSubject] = useState('Science');
   const [language, setLanguage] = useState(NCERT_DATA.Languages[0]);
-  const [book, setBook] = useState('');
-  const [chapter, setChapter] = useState('');
+  const [book, setBook] = useState('Science');
+  const [chapter, setChapter] = useState('2. Is Matter Around Us Pure');
   const [activity, setActivity] = useState(NCERT_DATA.Activities[0].id);
 
   // App State
@@ -678,10 +686,11 @@ CRITICAL JSON INSTRUCTIONS:
               properties: {
                 questionText: { type: Type.STRING, description: "The question text. NO EMOJIS." },
                 type: { type: Type.STRING, description: "'mcq', 'fill_blank', 'qa'" },
-                options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Array of exactly 2 string options if type is 'mcq'. NO EMOJIS." },
+                options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Array of exactly 2 string options if type is 'mcq'. Empty array otherwise. NO EMOJIS." },
                 answer: { type: Type.STRING, description: "Correct answer or text to fill in the blank. For 'qa' put the answer here. NO EMOJIS." },
                 explanation: { type: Type.STRING, description: "Explanation of the answer. NO EMOJIS." }
-              }
+              },
+              required: ["questionText", "type", "options", "answer", "explanation"]
             }
           }
         }
